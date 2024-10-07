@@ -17,6 +17,27 @@ def calculate_angle(A, B, C):
 
     return np.degrees(angle)  # Convert to degrees
 
+# Angle definitions for different body parts.
+angle_definitions = {
+    'right_elbow': (mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER, mp.solutions.pose.PoseLandmark.RIGHT_ELBOW, mp.solutions.pose.PoseLandmark.RIGHT_WRIST),
+    'left_elbow': (mp.solutions.pose.PoseLandmark.LEFT_SHOULDER, mp.solutions.pose.PoseLandmark.LEFT_ELBOW, mp.solutions.pose.PoseLandmark.LEFT_WRIST),
+    'right_shoulder': (mp.solutions.pose.PoseLandmark.RIGHT_ELBOW, mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER, mp.solutions.pose.PoseLandmark.RIGHT_HIP),
+    'left_shoulder': (mp.solutions.pose.PoseLandmark.LEFT_ELBOW, mp.solutions.pose.PoseLandmark.LEFT_SHOULDER, mp.solutions.pose.PoseLandmark.LEFT_HIP),
+    'neck': (mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER, mp.solutions.pose.PoseLandmark.NOSE, mp.solutions.pose.PoseLandmark.LEFT_SHOULDER),
+    'right_hip': (mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER, mp.solutions.pose.PoseLandmark.RIGHT_HIP, mp.solutions.pose.PoseLandmark.RIGHT_KNEE),
+    'left_hip': (mp.solutions.pose.PoseLandmark.LEFT_SHOULDER, mp.solutions.pose.PoseLandmark.LEFT_HIP, mp.solutions.pose.PoseLandmark.LEFT_KNEE),
+    'right_knee': (mp.solutions.pose.PoseLandmark.RIGHT_HIP, mp.solutions.pose.PoseLandmark.RIGHT_KNEE, mp.solutions.pose.PoseLandmark.RIGHT_ANKLE),
+    'left_knee': (mp.solutions.pose.PoseLandmark.LEFT_HIP, mp.solutions.pose.PoseLandmark.LEFT_KNEE, mp.solutions.pose.PoseLandmark.LEFT_ANKLE),
+    'right_ankle': (mp.solutions.pose.PoseLandmark.RIGHT_KNEE, mp.solutions.pose.PoseLandmark.RIGHT_ANKLE, mp.solutions.pose.PoseLandmark.RIGHT_FOOT_INDEX),
+    'left_ankle': (mp.solutions.pose.PoseLandmark.LEFT_KNEE, mp.solutions.pose.PoseLandmark.LEFT_ANKLE, mp.solutions.pose.PoseLandmark.LEFT_FOOT_INDEX),
+    'torso_bend': (mp.solutions.pose.PoseLandmark.LEFT_SHOULDER, mp.solutions.pose.PoseLandmark.LEFT_HIP, mp.solutions.pose.PoseLandmark.LEFT_KNEE),
+    'hip_flexion': (mp.solutions.pose.PoseLandmark.LEFT_SHOULDER, mp.solutions.pose.PoseLandmark.LEFT_HIP, mp.solutions.pose.PoseLandmark.LEFT_KNEE),
+    'right_arm_torso': (mp.solutions.pose.PoseLandmark.RIGHT_WRIST, mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER, mp.solutions.pose.PoseLandmark.RIGHT_HIP),
+    'left_arm_torso': (mp.solutions.pose.PoseLandmark.LEFT_WRIST, mp.solutions.pose.PoseLandmark.LEFT_SHOULDER, mp.solutions.pose.PoseLandmark.LEFT_HIP),
+    'right_leg_spread': (mp.solutions.pose.PoseLandmark.RIGHT_HIP, mp.solutions.pose.PoseLandmark.LEFT_HIP, mp.solutions.pose.PoseLandmark.RIGHT_ANKLE),
+    'left_leg_spread': (mp.solutions.pose.PoseLandmark.LEFT_HIP, mp.solutions.pose.PoseLandmark.RIGHT_HIP, mp.solutions.pose.PoseLandmark.LEFT_ANKLE),
+}
+
 # Initialize MediaPipe Pose.
 mp_pose = mp.solutions.pose
 pose = mp_pose.Pose()
@@ -40,75 +61,22 @@ while cap.isOpened():
 
     if results.pose_landmarks:
         landmarks = results.pose_landmarks.landmark
+        h, w, _ = image.shape
 
-        # Define key joint angles for both sides:
-        # Right Side Angles
-        right_elbow_angle = calculate_angle(
-            landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER],
-            landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW],
-            landmarks[mp_pose.PoseLandmark.RIGHT_WRIST]
-        )
-        right_knee_angle = calculate_angle(
-            landmarks[mp_pose.PoseLandmark.RIGHT_HIP],
-            landmarks[mp_pose.PoseLandmark.RIGHT_KNEE],
-            landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE]
-        )
-        right_hip_angle = calculate_angle(
-            landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER],
-            landmarks[mp_pose.PoseLandmark.RIGHT_HIP],
-            landmarks[mp_pose.PoseLandmark.RIGHT_KNEE]
-        )
+        # Iterate through the angle definitions and calculate the angles.
+        for angle_name, (point1, point2, point3) in angle_definitions.items():
+            angle = calculate_angle(
+                landmarks[point1], 
+                landmarks[point2], 
+                landmarks[point3]
+            )
 
-        # Left Side Angles
-        left_elbow_angle = calculate_angle(
-            landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER],
-            landmarks[mp_pose.PoseLandmark.LEFT_ELBOW],
-            landmarks[mp_pose.PoseLandmark.LEFT_WRIST]
-        )
-        left_knee_angle = calculate_angle(
-            landmarks[mp_pose.PoseLandmark.LEFT_HIP],
-            landmarks[mp_pose.PoseLandmark.LEFT_KNEE],
-            landmarks[mp_pose.PoseLandmark.LEFT_ANKLE]
-        )
-        left_hip_angle = calculate_angle(
-            landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER],
-            landmarks[mp_pose.PoseLandmark.LEFT_HIP],
-            landmarks[mp_pose.PoseLandmark.LEFT_KNEE]
-        )
-
-        # Display angles on the image, next to the respective joints:
-        h, w, c = image.shape
-        # Right Side
-        cv2.putText(image, f'{int(right_elbow_angle)}', 
-                    (int(landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW].x * w), 
-                     int(landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW].y * h)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
-
-        cv2.putText(image, f'{int(right_knee_angle)}', 
-                    (int(landmarks[mp_pose.PoseLandmark.RIGHT_KNEE].x * w), 
-                     int(landmarks[mp_pose.PoseLandmark.RIGHT_KNEE].y * h)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
-
-        cv2.putText(image, f'{int(right_hip_angle)}', 
-                    (int(landmarks[mp_pose.PoseLandmark.RIGHT_HIP].x * w), 
-                     int(landmarks[mp_pose.PoseLandmark.RIGHT_HIP].y * h)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
-
-        # Left Side
-        cv2.putText(image, f'{int(left_elbow_angle)}', 
-                    (int(landmarks[mp_pose.PoseLandmark.LEFT_ELBOW].x * w), 
-                     int(landmarks[mp_pose.PoseLandmark.LEFT_ELBOW].y * h)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
-
-        cv2.putText(image, f'{int(left_knee_angle)}', 
-                    (int(landmarks[mp_pose.PoseLandmark.LEFT_KNEE].x * w), 
-                     int(landmarks[mp_pose.PoseLandmark.LEFT_KNEE].y * h)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
-
-        cv2.putText(image, f'{int(left_hip_angle)}', 
-                    (int(landmarks[mp_pose.PoseLandmark.LEFT_HIP].x * w), 
-                     int(landmarks[mp_pose.PoseLandmark.LEFT_HIP].y * h)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
+            # Display the calculated angle on the image at the middle joint position.
+            joint_x = int(landmarks[point2].x * w)
+            joint_y = int(landmarks[point2].y * h)
+            cv2.putText(image, f'{angle_name}: {int(angle)}', 
+                        (joint_x, joint_y), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
 
         # Draw pose landmarks
         mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
