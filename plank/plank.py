@@ -75,10 +75,10 @@ while cap.isOpened():
 
                 feedback = ''
                 if plank_angle > 190:
-                    feedback = 'Back is too high'
+                    feedback = 'Back is too low'
                     holding_plank = False
                 elif plank_angle < 170:
-                    feedback = 'Back is too low'
+                    feedback = 'Back is too high'
                     holding_plank = False
                 else:
                     if not holding_plank:
